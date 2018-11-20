@@ -1,13 +1,69 @@
-Chapter 0 - Bitcoin Protocol Basics
-There are many aspects of the bitcoin protocol that isnt needed to understand the CC contracts dependence on it. Such details will not be discussed. The primary aspect is the utxo, unspent transaction output. Just a fancy name for txid/vout, so when you sendtoaddress some coins, it creates a txid and the first output is vout.0, combine it and txid/0 is a specific utxo.
+Bölüm 0 - Bitcoin Protokolü Temelleri
 
-Of course, to understand even this level of detail requires that you understand what a txid is, but there are plenty of reference materials on that. It is basically the 64 char long set of letters and numbers that you get when you send funds.
 
-Implicit with the utxo is that it prevents double spends. Once you spend a utxo, you cant spend it again. This is quite an important characteristic and while advanced readers will point out chain reorgs can allow a double spend, we will not confuse the issue with such details. The important thing is that given a blockchain at a specific height's blockhash, you can know if a txid/vout has been spent or not.
+Bitcoin protokolünde CC sözleşmelerinin bağımlılığını anlamak için gerekli olmayan birçok yön vardır.
+Bu tür detaylar tartışılmayacaktır. Birincil yön, utxo, harcanmamış işlem çıktısıdır.
+Sadece txid / vout için süslü bir isim, bu yüzden bazı paraları gönderir, bir txid oluşturur ve ilk çıktı vout.0, 
+onu birleştirin ve txid / 0 belirli bir utxo'dur. 
 
-There are also the transactions that are in memory waiting to be mined, the mempool. And it is possible for the utxo to be spent by a tx in the mempool. However since it isnt confirmed yet, it is still unspent at the current height, even if we are pretty sure it will be spent in the next block.
+There are many aspects of the bitcoin protocol that isnt needed to understand the CC contracts dependence on it. 
+Such details will not be discussed. The primary aspect is the utxo, unspent transaction output. 
+Just a fancy name for txid/vout, so when you sendtoaddress some coins, it creates a txid and the first output is vout.0, 
+combine it and txid/0 is a specific utxo.
 
-A useful example is to think about a queue of people lined up to get into an event. They need to have a valid ticket and also to get into the queue. After some time passes, they get their ticket stamped and allowed into the event.
 
-In the utxo case, the ticket is the spending transaction and the event is the confirmed blockchain. The queue is the mempool.
+Tabii ki, bu detay seviyesini bile anlamak, bir txid'in ne olduğunu anlamanızı gerektirir. 
+ama bu konuda çok fazla referans malzeme var. 
+Temelde, para gönderirken aldığınız 64 karakterlik uzun harf ve sayı kümesidir. 
+
+Of course, to understand even this level of detail requires that you understand what a txid is, 
+but there are plenty of reference materials on that. 
+It is basically the 64 char long set of letters and numbers that you get when you send funds.
+
+
+Utxo ile örtük, çift harcamaları önler
+Bir utxo harcadıktan sonra tekrar harcayamazsınız. 
+Bu oldukça önemli bir özelliktir ve ileri seviyedeki okuyucular zincir sıralarının çift harcamaya izin verebileceğini göstereceklerdir. 30
+sorunu bu tür detaylarla karıştırmayacağız. 33
+Önemli olan, belirli bir yükseklikteki blokta bir blok zincirinin verilmesidir. 35
+Bir txid / vout'un harcanıp harcanmadığını öğrenebilirsiniz. 37
+
+Implicit with the utxo is that it prevents double spends. 
+Once you spend a utxo, you cant spend it again. 
+This is quite an important characteristic and while advanced readers will point out chain reorgs can allow a double spend, 
+we will not confuse the issue with such details. 
+The important thing is that given a blockchain at a specific height's blockhash, 
+you can know if a txid/vout has been spent or not.
+
+
+Hafızada bekleyen işlemlerin de hafızada kalması bekleniyor. 41
+Ve utxo'nun memoda bir tx tarafından harcanması mümkündür. 43
+Ancak henüz teyit edilmediğinden, şu andaki yükseklikte hala yetersizdir, 45
+Bir sonraki blokta harcanacağından oldukça emin olsak bile. 47
+
+
+Hafızada bekleyen işlemlerin de hafızada kalması bekleniyor. 47
+Ve utxo'nun memoda bir tx tarafından harcanması mümkündür. 49
+Ancak henüz teyit edilmediğinden, şu andaki yükseklikte hala yetersizdir, 51
+Bir sonraki blokta harcanacağından oldukça emin olsak bile. 53
+
+There are also the transactions that are in memory waiting to be mined, the mempool. 
+And it is possible for the utxo to be spent by a tx in the mempool. 
+However since it isnt confirmed yet, it is still unspent at the current height, 
+even if we are pretty sure it will be spent in the next block.
+
+
+Yararlı bir örnek, bir olaya girmek için sıraya dizilmiş insanlardan oluşan bir kuyruk hakkında düşünmektir. 58
+Geçerli bir bilet almaları ve sıraya girmeleri gerekiyor. Bir süre geçtikten sonra, 60
+biletlerini damgaladılar ve olaya dahil oldular. 62
+
+A useful example is to think about a queue of people lined up to get into an event. 
+They need to have a valid ticket and also to get into the queue. After some time passes, 
+they get their ticket stamped and allowed into the event.
+
+
+Utxo durumunda, bilet harcama işlemidir ve olay onaylanmış blockchain'dir. 67
+
+In the utxo case, the ticket is the spending transaction and the event is the confirmed blockchain. 
+The queue is the mempool.
 
