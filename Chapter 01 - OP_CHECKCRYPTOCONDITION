@@ -1,12 +1,30 @@
 Chapter 1 - OP_CHECKCRYPTOCONDITION
+
+Önceki bölümde utxo açıklanmıştır. 
+Ancak, bir ödeme göndermek için kullanılan belirli mekanizma açıklanmamıştır. 
+Çoğu insanın düşünebileceğinin aksine, blockchain'de "adrese X miktarını ödeme" yazan girişler yoktur. 
+Bunun yerine, paranın harcanabilmesi için tatmin edilmesi gereken bir bitcoin betiği var.
+
 In the prior chapter the utxo was explained. However, the specific mechanism used to send a payment was not explained. 
 Contrary to what most people might think, on the blockchain there are not entries that say "pay X amount to address". 
 Instead what exists is a bitcoin script that must be satisfied in order for the funds to be able to be spent.
 
 
+Başlangıçta, pubkey komut dosyasının karşılığı vardı:
+
 Originally, there was the pay to pubkey script:
 <pubkey> <checksig>
 
+
+Alabileceğiniz bir ödeme komut dosyası kadar basit. 
+Temel olarak pubkey imzası kontrol edilir ve geçerliyse, harcamış olursunuz. 
+Bir kez sorun olan satoshi, Quantum Computers ile böyle bir ödeme betiğinin savunmasız olduğunu fark etti! 
+Yani, soğuk bir adrese sahip olmak için bir yol yaptı, yani. pubkey'i bilmeyen bir adres.
+En azından harcanana kadar bilinmemektedir, bu nedenle ilk harcanmadan önce sadece Kuantum dirençlidir. 
+Bu akıl yürütme nedenimiz, her bir işlem için bir kez kullanım adresleri ve yeni bir değişim adresimiz olmasıdır. 
+Belki bazı yönlerden, 
+bu, düşünmeyi çok daha karmaşık hale getirdiğinden ve gerekli tüm özel anahtarların kaydını kaybetmekten daha kolay hale getirdiği için, 
+çok ileriye dönük düşüncedir.
 
 About as simple of a payment script that you can get. 
 Basically the pubkey's signature is checked and if it is valid, you get to spend it. 
@@ -18,16 +36,31 @@ Maybe in some ways,
 this is too forward thinking as it makes things a lot more confusing to use and easier to lose track of all the required private keys.
 
 
+Ancak, burada kalmak ve onun betiği:
+<hash the pubkey> <pubkey> <verify hash matches> <checksig>
+Bununla birlikte, blockchain "adrese ödeme" için haritalara sahip,
+sadece adres aslında bir base58 kodlanmış (önek + pubkeyhash). Hey, eğer karmaşık olmasaydı, kolay olurdu!
+
 However, it is here to stay and its script is:
 <hash the pubkey> <pubkey> <verify hash matches> <checksig>
 With this, the blockchain has what maps to "pay to address", 
 just that the address is actually a base58 encoded (prefix + pubkeyhash). Hey, if it wasnt complicated, it would be easy!
 
 
+Bir p2pkh (pubkey hash'a ödeme) utxo harcamak için, geçerli bir imzaya sahip olmanın yanı sıra pubkey'i de açıklamanız gerekir.
+Bir adresten ilk harcanan paranın ardından, güvenliği, pubkey'in bilinmesiyle p2pk'ye (pubkey'e ödeme) düşürülür. 
+Net sonuç, her yeniden kullanılan adresin blockchain'de 25 bayt daha almasıdır. 
+ve bu yüzden yeniden kullanılması beklenen adresler için p2pk komut dosyasını kullanıyorum. 
+
 In order to spend a p2pkh (pay to pubkey hash) utxo, you need to divulge the pubkey in addition to having a valid signature. 
 After the first spend from an address, its security is degraded to p2pk (pay to pubkey) as its pubkey is now known.
 The net result is that each reused address takes 25 extra bytes on the blockchain, 
 and that is why for addresses that are expected to be reused, I just use the p2pk script.
+
+
+Başlangıçta, bitcoin, herhangi bir tipte komut dosyası opcodesinin doğrudan kullanılmasına izin verdi. 
+Sorun, bunların bir kısmının sorunlara yol açmasıydı ve satoshi onları devre dışı bırakmaya karar verdi ve 
+sadece standart ödeme şekillerine izin verdi. 66
 
 
 Originally, bitcoin allowed any type of script opcodes to be used directly. 
