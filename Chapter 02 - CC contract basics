@@ -1,4 +1,14 @@
+Bölüm 2 - CC sözleşme temelleri
+
 Chapter 2 - CC contract basics
+
+
+Her bir CC sözleşmesinin bir değerlendirme kodu vardır, bu sadece belirli bir CC sözleşmesiyle ilişkili olan keyfi bir sayıdır. 
+Belli bir CC sözleşmesi hakkındaki detaylar, doğrulama mantığıyla belirlenir, sonuçta bir CC sözleşmesi uygular. 
+Ancak, normal bitcoin ödemelerinden farklı olarak, yalnızca işlemdeki bilgilerle doğrulandığı yerde, 
+Bir CC sözleşmesi hemen hemen her şeyi yapma gücüne sahiptir. Blockchain'e ve hatta mempool a tam erişime sahiptir. 
+mempool bilgilerini kullanmak doğal olarak daha risklidir ve inklüzyonlar yerine dikkatle veya istisnalar için yapılması gerekir.
+
 Each CC contract has an eval code, this is just an arbitrary number that is associated with a specific CC contract. 
 The details about a specific CC contract are all determined by the validation logic, that is ultimately what implements a CC contract.
 However, unlike the normal bitcoin payments, where it is validated with only information in the transaction, 
@@ -6,11 +16,21 @@ a CC contract has the power to do pretty much anything. It has full access to th
 though using mempool information is inherently more risky and needs to be done carefully or for exclusions, rather than inclusions.
 
 
+Ancak, bu CC sözleşme temelleri bölümüdür, bu yüzden anı meselelerini göz ardı edelim ve sadece temel konularla ilgilenelim. 
+Temel olarak OP_CHECKCRYPTOCONDITION serileştirilmiş komut dosyaları için bir yapı yoktur, ama eğer benim gibi olursanız,
+1000 sayfalık bir IETF standardını okumak ve anlamaktan kaçınmak istersiniz. 26
+Gerçekten yapmak istediğimiz şey, 
+yeni bir sözleşme yapmak ve etkin bir şekilde kodlanıp hata ayıklaması yapabilmenin mantıklı bir yoludur.
+
 However, this is the CC contract basics chapter, so let us ignore mempool issues and deal with just the basics. 
 Fundamentally there is no structure for OP_CHECKCRYPTOCONDITION serialized scripts, but if you are like me, 
 you want to avoid having to read and understand a 1000 page IETF standard. 
 What we really want to do is have a logical way to make a new contract and have it be able to be coded and debugged in an efficient way.
 
+
+Bu sadece bilinen bir çalışma şablonunu takip etmek ve 
+sadece mevcut şablonların yeterli olmadığı şeyleri değiştirmek anlamına gelir, 
+yani. CC sözleşmenizin çekirdek farklılaştırıcısı.
 
 That means to just follow a known working template and only changing the things where the existing templates are not sufficient, 
 ie. the core differentiator of your CC contract.
@@ -38,12 +58,31 @@ In the ~/komodo/src/cc/eval.h file all the eval codes are defined, currently:
         EVAL(EVAL_PAYMENTS, 0xf0) \
         EVAL(EVAL_GATEWAYS, 0xf1)
         
+
+Sonuçta, muhtemelen tüm 256 değerlendirme kodları ile sonuçlanacak, çünkü artık bol miktarda oda var.
+Koinimin repolarına benzediğini hayal ettim. 
+256'dan fazla CC sözleşmesiyle sonuçlanabilir ve blok zinciriniz için aktif olmasını istediğiniz 256'yı seçersiniz.
+Bu, herhangi bir belirli zincirin, "yalnızca" 256 sözleşmeye sahip ile sınırlı kalacağı anlamına gelir. 
+Şimdiye kadar çok az sayıdaki faydalı sözleşmeler olduğu için, bu sınır yeterli görünmektedir. 
+Değerlendirmenin herhangi bir uzunlukta olabileceği söylendi, ancak mevcut CC sözleşmeleri bir bayt olduğunu varsayar. 
+
 Ultimately, we will probably end up with all 256 eval codes used, for now there is plenty of room. 
-I imagined that similar to my coins repo, we can end up with a much larger than 256 number of CC contracts and you select the 256 that 
-you want active for your blockchain. That does mean any specific chain will be limited to "only" having 256 contracts. 
+I imagined that similar to my coins repo, 
+we can end up with a much larger than 256 number of CC contracts and you select the 256 that you want active for your blockchain. 
+That does mean any specific chain will be limited to "only" having 256 contracts. 
 Since there seems to be so few actually useful contracts so far, this limit seems to be sufficient. 
 I am told that the evalcode can be of any length, but the current CC contracts assumes it is one byte. 
 
+
+En basit CC betiği, bir CC anahtarının yanı sıra bir pubkey'den imzayı gerektiren bir betik olacaktır. 
+Bu, pubkey bitcoin komut dosyasının karşılığıdır ve ilk CC sözleşmelerinin çoğunun kullandığı değerdir.
+Sadece bundan daha fazlasına ihtiyaç duyulan kanallar ve onun bölümünde açıklanacaktır. 
+Biz (evalcode) + (pubkey) + (other stuff) formunun CC betikleri ile sonuçlanırız, diğer şeyler hakkında endişelenmeyin, 
+Bazı kullanışlı iç işlevlerle otomatik olarak ele alınır. 
+Dikkat edilmesi gereken önemli nokta, 
+bu formdaki her bir CC sözleşmesinin tek bir pubkey ve eval koduna ihtiyaç duyması ve bundan CC komut dosyasını almamızdır. 
+Standart bitcoin 'hash ve ondan bir adres yap' yöntemini kullanmak, 
+aynı pubkey'in her farklı CC sözleşmesi için farklı bir adres üreteceği anlamına gelir! 
 
 The simplest CC script would be one that requires a signature from a pubkey along with a CC validation.
 This is the equivalent of the pay to pubkey bitcoin script and is what most of the initial CC contracts use.
@@ -54,25 +93,50 @@ The important thing to note is that each CC contract of this form needs a single
 Using the standard bitcoin's "hash and make an address from it" method, this means that the same pubkey will generate a different address for each different CC contract!
 
 
+Bu önemli bir nokta, bu yüzden farklı bir şekilde söyleyeceğim. 
+Bitcoin'de, hem sağ hem de sol yarısı bir araya getirilmiş sıkıştırılmamış pubkey'ler, 
+dev bir 64 baytlık pubkey'e dönüştürülür.
+Ama birinden diğerini türetebileceğinizden, sıkıştırılmış pubkeyler standart haline geldi,
+bu yüzden 65 bayt yerine 33 baytlık bit pub'ınız var. Tek, çift veya büyük pubkey anlamına gelen 02, 03 veya 04 öneki vardır. 
+Bu, her bir özel anahtar için sıkıştırılmış ve sıkıştırılmamış iki farklı pubkey olduğu anlamına gelir.
+Ve aslında aynı özel anahtarın kullanabileceği iki farklı bitcoin protokol adresine sahip olabilirsiniz.
+Bazı kağıt cüzdan üreticileri kullanıyorsanız, bunu fark etmiş olabilirsiniz. 
+
 This is an important point, so I will say it in a different way. 
 In bitcoin there used to be uncompressed pubkeys which had both the right and left half combined, into a giant 64 byte pubkey. 
 But since you can derive one from the other, compressed pubkeys became the standard, 
-that is why you have bitcoin pubkeys of 33 bytes instead of 65 bytes. There is a 02, 03 or 04 prefix, to mean odd or even or big pubkey. 
+that is why you have bitcoin pubkeys of 33 bytes instead of 65 bytes. 
+There is a 02, 03 or 04 prefix, to mean odd or even or big pubkey. 
 This means there are two different pubkeys for each privkey, the compressed and uncompressed. 
 And in fact you can have two different bitcoin protocol addresses that are spendable by the same privkey. 
 If you use some paper wallet generators, you might have noticed this.
 
 
+CC sözleşmeleri, her pubkey'in her bir değerlendirme kodu için farklı bir adres aldığı yer gibidir.
+Aynı pubkey, sadece gercek script farkli bir evalcode a sahip oldugundan dolayi farkli bir adres olur, 
+farklı bir hash ve dolayısıyla farklı bir adres ile biter.
+Şimdi belirli bir CC adresine gönderilen fonlara yalnızca bu CC sözleşmesiyle erişilebilir ve bu sözleşmenin kurallarına uymalıdır.
+Ayrıca, sözleşmenin her bir CC sözleşmesi için özel anahtarı da dahil olmak üzere 
+herkes tarafından bilinen özel bir adrese sahip olduğu başka bir yararlı özellik ekledim.
+Gizli anahtarı yayınlama konusunda paniklemeden önce, bir CC çıkışı harcamanızı unutmayın. 
+Doğru şekilde imzalamanız ve tüm kuralları yerine getirmeniz gerekir. Herkesin CC sözleşmesi için özel anahtarına sahip olmasıyla, 132
+Herkes "düzgün bir şekilde işaret" bölümünü yapabilir, ancak yine de kuralların geri kalanını takip etmeleri gerekir.
+
 CC contracts are like that, where each pubkey gets a different address for each evalcode. 
 It is the same pubkey, just different address due to the actual script having a different evalcode, 
 it ends up with a different hash and thus a different address. 
 Now funds send to a specific CC address is only accessible by that CC contract and must follow the rules of that contract.
-I also added another very useful feature where the convention is for each CC contract to have a special address that 
-is known to all, including its private key. 
+I also added another very useful feature where the convention is for each CC contract to have a special address 
+that is known to all, including its private key. 
 Before you panic about publishing the private key, remember that to spend a CC output, 
 you need to properly sign it AND satisfy all the rules. By everyone having the privkey for the CC contract, 
 everybody can do the "properly sign" part, but they still need to follow the rest of the rules.
 
+
+Bir kullanıcının bakış açısından, 
+bir CC sözleşmesi için küresel CC adresi vardır ve bazı sözleşmeler de kullanıcı pubkey'in CC adresini kullanır.
+Her sözleşme için bir çift yeni adrese sahip olmak ilk başta biraz kafa karıştırıcı olabilir,
+ama sonunda kullanımı kolay hale getirecek GUI'yi kullanacağız. 
 
 From a user's perspective, there is the global CC address for a CC contract and some contracts also use the user pubkey's CC address. 
 Having a pair of new addresses for each contract can get a bit confusing at first, 
