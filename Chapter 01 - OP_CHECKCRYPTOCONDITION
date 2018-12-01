@@ -60,8 +60,14 @@ and that is why for addresses that are expected to be reused, I just use the p2p
 
 Başlangıçta, bitcoin, herhangi bir tipte komut dosyası opcodesinin doğrudan kullanılmasına izin verdi. 
 Sorun, bunların bir kısmının sorunlara yol açmasıydı ve satoshi onları devre dışı bırakmaya karar verdi ve 
-sadece standart ödeme şekillerine izin verdi. 66
-
+sadece standart ödeme şekillerine izin verdi. 
+Böylece p2pk ve p2pkh, bitcoin işlemlerinin% 99'u oldu.
+Ancak, sayısız ödeme komut dosyaları (ve hatalar!) Oluşturabilen tam olarak betikli bir dile sahip olmak,
+sadece 2'ye sahip olmak ... iyi bir "kısa süreli" sınırlamadır.
+Birkaç yıl sürdü ama sonunda bir uzlaşma p2sh komut dosyasının standart olmasına izin verildi.
+Bu, komut dosyası karma için bir ücrettir, bu yüzden normal p2pkh olarak standart bir biçime sahip olabilir, 
+ancak sonsuz derecede daha fazla esnekliğe sahiptir.
+<hash the script> <script> <verify hash matches>
 
 Originally, bitcoin allowed any type of script opcodes to be used directly. 
 The problem was some of them caused problems and satoshi decided to disable them and only allow standard forms of payments.
@@ -73,27 +79,54 @@ This is a pay to script hash, so it can have a standard format as the normal p2p
 <hash the script> <script> <verify hash matches>
 
 
+Bekle, bir şey yanlış! Eğer öyleyse, gerekli betiğin (redeemscript olarak adlandırılır) ne olduğunu öğrenen herkes,
+Sadece harcayabilirlerdi. Ödemenin daha sonra harcanıp harcanmayacağını belirlemek için yeniden yazımın kullanıldığını söylemeyi unuttum.
+Yani bir p2sh komut dosyasının içinde normal bir p2pk veya p2pkh redeemscript olabilir.
+
 Wait, something is wrong! If it was just that, then anybody that found out what the required script (called redeemscript) was, 
 they could just spend it. I forgot to say that the redeemscript is then used to determine if the payment can be spent or not. 
 So you can have a normal p2pk or p2pkh redeemscript inside a p2sh script.
 
 
+Tamam, biliyorum gerçekten kafa karıştırıcı. Daha açık bir örneğimiz olsun: 
+
 OK, I know that just got really confusing. Let us have a more clear example:
 
+
+redeemscript <- pay to pubkey 
+p2sh, redeem betiğinin karması + karşılaştırır 
 
 redeemscript <- pay to pubkey 
 p2sh becomes the hash of the redeem script + the compares
 
 
+Yani, bunu harcamak için, redeemscript'i açıklamanız gerekir, bu da size pubkey'i açıklamanızı gerektirir. 
+Hepsini bir araya getirin ve p2sh mekanizması, yalnızca karma değerini karşılaştırarak doğru özgeçmişe sahip olmadığınızı doğrular.
+ancak, bu redeemscript çalıştırıldığında, bu memnun. Bu durumda, pubkey imzası geçerliydi.
+Hala takip ediyorsanız, iyi haberler var!
+OP_CHECKCRYPTOCONDITION komut dosyaları aslında bir scripthash içinde bu ekstra komut dosyası olmadığı için 
+bir anlamda p2sh betiklerinden daha basittir. 
+@libscott, bitcoin opcodes kümesine OP_CHECKCRYPTOCONDITION eklemesini uyguladı ve 
+Ne yapar, bir CryptoConditions komut dosyasının doğru şekilde imzalandığından emin olmanızı sağlar. 
+
 So to spend it, you need to divulge the redeemscript, which in turn requires you to divulge the pubkey. 
 Put it all together and the p2sh mechanism verifies you not only had the correct redeemscript by comparing its hash, 
 but that when the redeemscript is run, it is satisfied. In this case, that the pubkey's signature was valid.
-If you are still following, 
-there is some good news! OP_CHECKCRYPTOCONDITION scripts are actually simpler than 
-p2sh scripts in some sense as there isnt this extra level of script inside a scripthash. 
+If you are still following, there is some good news! 
+OP_CHECKCRYPTOCONDITION scripts are actually simpler than p2sh scripts in some sense as there isnt this extra level of script inside a scripthash. 
 @libscott implemented the addition of OP_CHECKCRYPTOCONDITION to the set of bitcoin opcodes and 
 what it does is makes sure that a CryptoConditions script is properly signed.
 
+
+Bizi CryptoConditions spesifikasyonuna getiren, 
+Bir IETF (internet standartları) taslağı olan bir canavarıdır ve yüzlerce sayfa spesifikasyona sahiptir.
+Gerçekten bunu bilmene gerek olmadığını bilmekten mutluluk duyarım! 
+Sadece her türlü kripto koşulunu oluşturabileceğinizi ve ikili kodlamanın bir bitcoin utxo'da kullanılabileceğini bilin.
+Standart CC sözleşmeleri ihtiyacınız olan güce sahip değilse, üzerinde genişletmek her zaman mümkündür. 
+Şimdiye kadar, 
+tüm CC sözleşmelerinin sadece 1of1 CC senaryosunun gücüne ihtiyacı vardır, bu da özel kısıtlarla birleştirilen 1 imzadır. 
+Gerçek zamanlı ödeme kanalları CC, bu modele uymayan referans CC sözleşmelerinden sadece biridir.
+1of2 CC betiğine ihtiyaç duydu.
 
 Which gets us to the CryptoConditions specification, 
 which is a monster of a IETF (Internet standards) draft and has hundred(s) of pages of specification. 
@@ -103,6 +136,10 @@ If the standard CC contracts dont have the power you need, it is always possible
 So far, most all the CC contracts only need the power of a 1of1 CC script, which is 1 signature combined with custom constraints. 
 The realtime payment channels CC is the only one of the reference CC contracts so far that didnt fit into this model, 
 it needed a 1of2 CC script.
+
+
+En iyi bölüm, tüm bu opcode seviyesinin gerekli olmadığıdır. 
+Sadece her şeyin ayrıntılarını bilmesi gerekenler için açıklamak istedim.
 
 The best part is that all these opcode level things are not needed at all. 
 I just wanted to explain it for those that need to know all the details of everything.
