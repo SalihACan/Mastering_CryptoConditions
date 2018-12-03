@@ -15,16 +15,38 @@ once spent it is combined with the other coins that are also spent in that trans
 
 vin0 + vin1 + vin2 -> vout0 + vout1
 
+vin0 + vin1 + vin2 -> vout0 + vout1
+
+
+Bu 3 giriş, 2 çıkış işlemidir. Üç girdiden gelen değer birleştirilir ve daha sonra vout0 ve vout1'e bölünür.
+Vout larin her biri, harcanabileceğinden tatmin olması gereken bir harcama senaryosu alır. 
+Hangi üçü de dışardan gelirse, tüm gereksinimler (bunları oluşturan çıktıda belirtildiği gibi) karşılanır.
 
 That is a 3 input, 2 output transaction. The value from the three inputs are combined and then split into vout0 and vout1, 
 each of the vouts gets a spend script that must be satisfied to be able to be spent. Which means for all three of out vins, 
 all the requirements (as specified in the output that created them) are satisfied.
 
 
+Evet, bunun güzel bir grafik olmadan biraz karmaşık olduğunu biliyorum, bu yüzden burada güzel bir grafik ekleneceğini umuyoruz:
+
 Yes, I know this is a bit too complicated without a nice chart, so we will hope that a nice chart is added here:
 
 
 [nice chart goes here]
+
+
+CC sözleşmelerinin tüm yönleri dışında, farklı vins ve vouts'un yarattığı esneklik en büyük sürpriz oldu.
+Bunlardan bir ay önce bunları yazmaya başladığımda, akıllı utxo sözleşmelerinde var olan gücün hiçbir fikrim yoktu. 
+Fonları kilitlemenin ve bazı özel şartlar üzerine onları serbest bırakmanın bir yolunun olması için mutluyum. 
+Varlık / token  CC sözleşmelerinin ardından, bunun buzdağının sadece bir ucu olduğunu anladım. 
+Turing'in tamamlandığını biliyordum, ama tüm bu kısıtlı bitcoin senaryosundan sonra, 
+herhangi bir keyfi algoritmanın tam gücüne sahip olmak, göz açılışıydı.
+Blockchain kodunun yazılması ve her hatayla gerçekten kötü sonuçlara sahip olmanın yıllar boyu, 
+sizi agresif şeyleri konsensüs seviyesinde yapmaktan çekiniyorsunuz. 
+Ve olması gerektiği gibi, çok dikkatli değilse, bazı kötü şeyler olabilir ve olabilir. 
+Mevcut (iyi test edilmiş ve güvenilir) utkso sisteminin üstüne bina temeli, 
+CC'nin canavar hataları için daha az sözleşme yapmasını sağlayan şeydir. 
+Bununla birlikte, doğrulama eksikliği, yanlış kodlanmış bir CC sözleşmesinin fonlarının boşalmasına kolayca izin verebilir.
 
 
 Out of all the aspects of the CC contracts, the flexibility that different vins and vouts created was the biggest surprise. 
@@ -41,10 +63,22 @@ makes the CC contracts less likely for the monster bugs. That being said,
 lack of validation can easily allow an improperly coded CC contract to have its funds drained.
 
 
+CC sözleşmesi, bir bitcoin işleminin standart sınırlamalarından çıkar.
+Zaten yazdıklarım nedenini açıklıyor, ama ilk başta benim için bile belli değildi. 
+Muhtemelen bunu kaçırmış olabilirsiniz. Yeryüzünde ne hakkında konuştuğumu merak ediyorsanız, bahsettiğim şey buydu! 
+
 The CC contract breaks out of the standard limitations of a bitcoin transaction. 
 Already, what I wrote explains the reason, but it was not obvious even to me at first, 
 so likely you might have missed it too. If you are wondering what on earth I am talking about, THAT is what I am talking about!
 
+
+Özetlemek gerekirse, şimdi CC çıkışı olarak adlandırılan yeni bir standart bitcoin çıkış tipine sahibiz. Daha ileri,
+Verilen herhangi bir blok zincirde 256 adete kadar farklı CC çıkışı aktif olabilir.
+Ayrıca, herhangi bir çıktıyı harcamanız için harcama senaryosunu yerine getirmeniz gerektiğini biliyoruz. 
+Bizim örneğimizde bu, imzası ve CC geçerliliğinin getirdiği her türlü kısıtlamadır.
+Aynı zamanda, bize gönderilen fonların bulunabileceği bir genel CC adresi veren, 
+global olarak paylaşılan bir anahtar kutusunun da sözleşmesi var.
+Bir kullanıcı pubkey özel CC adresi ile birlikte.
 
 To recap, we have now a new standard bitcoin output type called a CC output. Further, 
 there can be up to 256 different types of CC outputs active on any given blockchain. 
@@ -54,21 +88,35 @@ We also have the convention of a globally shared keypair, which gives us a gener
 along with a user pubkey specific CC address.
 
 
+3 + 2 işlem örneğine geri dönelim: 
+
 Let us go back to the 3+2 transaction example:
 
 
 vin0 + vin1 + vin2 -> vout0 + vout1
 
 
+Önceki paragraf göz önüne alındığında, basit 3 + 2 işleminin olanaklarını hayal etmeye çalışın. 
+Her bir vin, global sözleşme adresinden, kullanıcının CC adresinden ve vokallerin de bu menzile sahip olacağı normal bir vin olabilir.
+Teorik olarak, 3 + 2 işlemin formu 257 * 257 * 257 * 257 * 257 olabilir!
+
 Given the prior paragraph, try to imagine the possibilities the simple 3+2 transaction can be. 
 Each vin could be a normal vin, from the global contract address, the user's CC address and the vouts can also have this range. 
 Theoretically, there can be 257 * 257 * 257 * 257 * 257 forms of a 3+2 transaction!
 
 
+Gerçekten çok fazla özgürlüğü istemiyoruz çünkü büyük hatalar sağlayacak!
+Bu yüzden, her biri için en fazla 3 tip ve tercihen sadece 1 tip olan şeyleri daha yönetilebilir bir seviyeye indirmemiz gerekiyor.
+Bu, gücü onaylamadığımız sürece, daha basit ve basit olanı onaylama işini daha iyi hale getirecektir. Yapmıyoruz. 
+
 In reality, we really dont want that much degrees of freedom as it will ensure a large degree of bugs! 
 So we need to reduce things to a more manageable level where there are at most 3 types for each, and preferably just 1 type. 
 That will make the job of validating it much simpler and simple is better as long as we dont sacrifice the power. We dont.
 
+
+Nihayetinde, CC sözleşmesi, onun girdilerini nasıl kısıtladığıyla ilgilidir. 
+ama onları kısıtlayabilmeden önce, çıktı olarak yaratılmaları gerekiyor.
+CC doğrulama bölümünde bu konu hakkinda daha fazlası var.
 
 Ultimately the CC contract is all about how it constrains its inputs, 
 but before it can constrain them, they need to be created as outputs. 
