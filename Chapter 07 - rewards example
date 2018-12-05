@@ -1,22 +1,85 @@
+Bölüm 7 - ödül örneği 
+
 Chapter 7 - rewards example
-The next CC contract in complexity is the rewards CC contract. This is designed to capture what most people like about masternodes, without anything else, ie. the rewards!
 
-The idea is to allow people to lock funds for some amount of time and get an extra reward. We also want to support having more than one rewards plan at a time and to allow customization of plan details. One twist that makes it a bit unexpected is that anybody should be able to unlock the funds that were locked, as long as it ends up in the locking address. The reason for this is that SPV servers want to be supported and while locking can be done via normal sendrawtransaction, it requires a native node to do the unlocking. By allowing anybody to be able to unlock, then there can be a special node that unlocks all locked funds when they are ready. This way, from the user's point of view, they lock the funds and after it is matured, it reappears in their wallet.
 
-The above requirements leads us to using the global CC address for the rewards contract to lock the funds in. That allows anybody to properly sign the unlock, but of course that is not enough, we need to make sure they are following all the unlock requirements. Primarily that the funds go back to the locking address.
+Karmaşıklıktaki bir sonraki CC sözleşmesi, CC sözleşmesini ödüllendirir. 
+Bu, çoğu insanın başka şeyleri olmayan, örneğin masternodlar hakkında neyi sevdiğini yakalamak için tasarlanmıştır. ödüller! 
+
+The next CC contract in complexity is the rewards CC contract. 
+This is designed to capture what most people like about masternodes, without anything else, ie. the rewards!
+
+
+Fikir, insanların belirli bir süre için paralarını kilitlemelerine ve ekstra bir ödül almasına izin vermektir.
+Aynı zamanda bir seferde birden fazla ödül planına sahip olmayı ve plan detaylarının özelleştirilmesini desteklemeyi de istiyoruz. 
+Bunu biraz beklenmedik yapan bir büküm, kilitleme adresinde bittiği sürece herkesin kilitli olan fonların kilidini açabilmesidir. 
+Bunun nedeni, SPV sunucularının desteklenmesini istemesi ve kilitlemenin normal sendrawtransaction yoluyla yapılabilmesi iken, 
+kilidin açılması için yerel bir düğüm gerektirmesidir.
+Herhangi birinin kilidini açmasına izin vererek, hazır olduğunda tüm kilitli fonların kilidini açan özel bir düğüm olabilir.
+Bu şekilde, kullanıcının bakış açısından, fonları kilitlerler ve olgunlaştıktan sonra cüzdanlarında tekrar görünürler.
+
+The idea is to allow people to lock funds for some amount of time and get an extra reward. 
+We also want to support having more than one rewards plan at a time and to allow customization of plan details. 
+One twist that makes it a bit unexpected is that anybody should be able to unlock the funds that were locked, as long as it ends up in the locking address. 
+The reason for this is that SPV servers want to be supported and while locking can be done via normal sendrawtransaction, it requires a native node to do the unlocking. 
+By allowing anybody to be able to unlock, then there can be a special node that unlocks all locked funds when they are ready. 
+This way, from the user's point of view, they lock the funds and after it is matured, it reappears in their wallet.
+
+
+Yukarıdaki şartlar, fonları kilitlemek için ödül sözleşmesi için küresel CC adresini kullanmamızı sağlar.
+Bu, herkesin kilidin kilidini düzgün bir şekilde imzalamasına izin veriyor, ama tabii ki bu yeterli değil.
+Tüm kilit açma gereksinimlerini takip ettiğinden emin olmalıyız. Öncelikle fonlar kilitli adrese geri döner. 
+Özelleştirilebilir olan ödül planının dört yönü şunlardır: 
+APR, minseconds, maxseconds, mindeposit
+
+The above requirements leads us to using the global CC address for the rewards contract to lock the funds in. 
+That allows anybody to properly sign the unlock, but of course that is not enough, 
+we need to make sure they are following all the unlock requirements. Primarily that the funds go back to the locking address.
 The four aspects of the rewards plan that are customizable are:
 APR, minseconds, maxseconds, mindeposit
 
-This allows each plan to set a different APR (up to 25%, anything above is becoming silly), the minimum time funds must be locked, the maximum time they are earning rewards and the minimum that can be deposited.
-So the tx that creates the rewards plan will have these attributes and it is put into the OP_RETURN data. All the other calls will reference the plan creation txid and inherit these parameters from the creation tx. This means it is an important validation to do, to make sure the funding txid is a valid funding txid.
+
+Bu, her bir planın farklı bir APR ayarlamasına izin verir (% 25'e varan, yukarıdaki herhangi bir şey aptallaşıyor), 
+minimum zaman fonunun kilitlenmesi gerekir.
+Ödüller kazandıkları maksimum süre ve yatırılabilecek minimum miktar. 
+Öyleyse, ödül planını oluşturan tx bu özelliklere sahip olacak ve OP_RETURN verisine konacaktır.
+Diğer tüm çağrılar plan oluşturma txid ine referans gösterecek ve bu parametreleri yaratılış txinden devralır.
+Bu, txid fonunun geçerli bir finansman txid olduğundan emin olmak için yapılacak önemli bir doğrulamadır.
+
+This allows each plan to set a different APR (up to 25%, anything above is becoming silly), the minimum time funds must be locked, 
+the maximum time they are earning rewards and the minimum that can be deposited.
+So the tx that creates the rewards plan will have these attributes and it is put into the OP_RETURN data. 
+All the other calls will reference the plan creation txid and inherit these parameters from the creation tx. 
+This means it is an important validation to do, to make sure the funding txid is a valid funding txid.
+
+
+İlk finansmanın mümkün olacağından, ödül planına daha fazla fon eklenmesinin bir yolu olmalıdır. 
 
 Since it is possible that the initial funding will be used up, there needs to be a way for more funding to be added to the rewards plan.
 
-Having multiple possible rewards plans means it is useful to have rpc calls to get information about them. Hence: rewardslist returns the list of rewards creation txids and rewardsinfo <txid> returns the details about a specific rewards plan.
 
-A locking transaction sends funds to the rewards CC address, along with a normal (small) tx to the address that the unlock should go to. This allows the validation of the proper unlocking.
+Mümkün olan çok sayıda ödül planına sahip olmak, onlar hakkında bilgi almak için rpc çağrılarının yapılmasının yararlı olacağı anlamına gelir.
+Bu nedenle: rewardslist, ödül oluşturma txids'in döndürür ve rewardsinfo <txid> belirli bir ödül planı hakkındaki ayrıntıları döndürür.
 
-All of these things are done in rewards.cpp, with the validation code being about 200 lines and a total of 700 lines or so. Bigger than faucet, but most of the code is the non-consensus code to create the proper transactions. In order to simplify the validation, specific vin and vout positions are designated to have specific required values:
+Having multiple possible rewards plans means it is useful to have rpc calls to get information about them. 
+Hence: rewardslist returns the list of rewards creation txids and rewardsinfo <txid> returns the details about a specific rewards plan.
+
+
+Kilitleme işlemi, ödülleri CC adresine, kilidin açılması gereken adrese normal (küçük) bir tx ile birlikte para gönderir.
+Bu, uygun kilit açma işleminin onaylanmasını sağlar.
+
+A locking transaction sends funds to the rewards CC address, along with a normal (small) tx to the address that the unlock should go to. 
+This allows the validation of the proper unlocking.
+
+
+Tüm bu şeyler, doğrulama kodu 200 satır ve toplam 700 satır olmak üzere rewards.cpp içinde yapılır.
+Musluktan daha büyük, ancak kodun çoğu uygun işlemleri oluşturmak için fikir birliği yapmayan koddur.
+Doğrulamayı basitleştirmek için, belirli vin ve vout pozisyonları özel gerekli değerlere sahip olacak şekilde belirlenir:
+
+All of these things are done in rewards.cpp, with the validation code being about 200 lines and a total of 700 lines or so. 
+Bigger than faucet, but most of the code is the non-consensus code to create the proper transactions. 
+In order to simplify the validation, specific vin and vout positions are designated to have specific required values:
+
 
 createfunding
 vins.*: normal inputs
@@ -45,4 +108,9 @@ vout.0: funding CC change
 vout.1: normal output to unlock address
 vout.n-1: opreturn 'U' sbits fundingtxid
 
-It is recommended to create such a vin/vout allocation for each CC contract to make sure that the rpc calls that create the transaction and the validation code have a specific set of constraints that can be checked for.
+
+Her CC sözleşmesi için böyle bir vin / vout tahsisatının oluşturulması, işlemin oluşturulduğu rpc çağrılarının ve 
+doğrulama kodunun kontrol edilebilecek belirli bir kısıtlama kümesine sahip olduğundan emin olunması önerilir.
+
+It is recommended to create such a vin/vout allocation for each CC contract to make sure that the rpc calls that create the transaction
+and the validation code have a specific set of constraints that can be checked for.
