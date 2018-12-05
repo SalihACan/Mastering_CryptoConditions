@@ -1,38 +1,111 @@
-Chapter 6 - faucet example
-Finally, we are ready for the first actual example of a CC contract. The faucet. This is a very simple contract and it ran into some interesting bugs in the first incarnation.
+Bölüm 6 - musluk örneği 
 
-The code in ~/komodo/src/cc/faucet.cpp is the ultimate documentation for it with all the details, so I will just address the conceptual issues here.
+Chapter 6 - faucet example
+
+
+Son olarak, bir CC sözleşmesinin ilk gerçek örneğine hazırız. Musluk.
+Bu çok basit bir sözleşmedir ve ilk enkarnasyonda bazı ilginç hatalara yol açmıştır.
+
+Finally, we are ready for the first actual example of a CC contract. The faucet. 
+This is a very simple contract and it ran into some interesting bugs in the first incarnation.
+
+
+~ / Komodo / src / cc / faucet.cpp içindeki kod, tüm detaylar için nihai belgelerdir.
+bu yüzden burada sadece kavramsal konuları ele alacağım. 
+
+The code in ~/komodo/src/cc/faucet.cpp is the ultimate documentation for it with all the details, 
+so I will just address the conceptual issues here.
+
+
+Faucet.cpp'de sadece 7 fonksiyon var, yorumlar da dahil 200'den fazla satır. İlk üçü doğrulama içindir, son dordu rpc cagrilari icin.
 
 There are only 7 functions in faucet.cpp, a bit over 200 lines including comments. The first three are for validation, the last four for the rpc calls to use. 
 
+
 int64_t IsFaucetvout(struct CCcontract_info *cp,const CTransaction& tx,int32_t v)
+
 
 bool FaucetExactAmounts(struct CCcontract_info cp,Eval eval,const CTransaction &tx,int32_t minage,uint64_t txfee)
 
+
 bool FaucetValidate(struct CCcontract_info cp,Eval eval,const CTransaction &tx)
+
 
 int64_t AddFaucetInputs(struct CCcontract_info *cp,CMutableTransaction &mtx,CPubKey pk,int64_t total,int32_t maxinputs)
 
+
 std::string FaucetGet(uint64_t txfee)
+
 
 std::string FaucetFund(uint64_t txfee,int64_t funds)
 
+
 UniValue FaucetInfo()
+
+
+Rpcwallet uygulamasındaki fonksiyonlar: 
+
 Functions in rpcwallet implement:
+
 
 faucetaddress fully implemented in rpcwallet.cpp
 faucetfund calls FaucetFund
 faucetget calls FaucetGet
 faucetinfo calls FaucetInfo
 
-Now you might not be a programmer, but I hope you are able to understand the above sequence. user types in a cli call, komodo-cli processes it by calling the rpc function, which in turn calls the function inside faucet.cpp
 
-No magic, just simple conversion of a user command line call that runs code inside the komodod. Both the faucetfund and faucetget create properly signed rawtransaction that is ready to be broadcast to the network using the standard sendrawtransaction rpc. It doesnt automatically do this to allow the GUI to have a confirmation step with all the details before doing an irrevocable CC contract transaction.
+Artık bir programcı olmayabilirsiniz, ama umarım yukarıdaki diziyi anlayabilirsiniz. 
+Bir kestirme ara kullanıcı tiplerini, komodo-cli, rpc işlevini çağırarak işler, bu da sırasıyla faucet.cpp içindeki işlevi çağırır. 
+
+Now you might not be a programmer, but I hope you are able to understand the above sequence. 
+user types in a cli call, komodo-cli processes it by calling the rpc function, which in turn calls the function inside faucet.cpp
+
+
+Sihir yok, komodod içinde kod çalıştıran bir kullanıcı komut satırı çağrısı sadece basit dönüşüm. 
+Hem faucetfund hem de faucetget, standart sendrawtransaction rpc'yi kullanarak 
+ağa yayınlanmaya hazır olan uygun bir şekilde imzalanmış ham işlem yaratır(rawtransaction). 
+
+No magic, just simple conversion of a user command line call that runs code inside the komodod. 
+Both the faucetfund and faucetget create properly signed rawtransaction 
+that is ready to be broadcast to the network using the standard sendrawtransaction rpc. 
+It doesnt automatically do this to allow the GUI to have a confirmation step with all the details before doing an irrevocable CC contract transaction.
+
+
+Faucetfund, herkesin musluklara para eklemesini sağlar 
+fauceget, kuralları ihlal etmediği sürece musluktan 0.1 token almayı sağlar.
+Ve her şeyin ne olduğuna geliyoruz. Muslukun kuralları. Başlangıçta çok daha az katıydı ve yavaş yavaş boşaltılmasına izin verdi,
+ama otomatik olarak ve musluğu kullanabilmekten en çok engellenir.
 
 faucetfund allows anybody to add funds to the faucet
 faucetget allows anybody to get 0.1 coins from the faucet as long as they dont violate the rules.
-And we come to what it is all about. The rules of the faucet. Initially it was much less strict and that allowed it to be drained slowly, but automatically and it prevented most from being able to use the faucet. 
+And we come to what it is all about. The rules of the faucet. Initially it was much less strict and that allowed it to be drained slowly, 
+but automatically and it prevented most from being able to use the faucet. 
 
-To make it much harder to leech, it was made so each faucetget returned only 0.1 coins (down from 1.0) so it was worth 90% less. It was also made so that it had to be to a fresh address with less than 3 transactions. Finally each txid was constrained to start and end with 00! This is a cool trick to force usage of precious CPU time (20 to 60 seconds depending on system) to generate a valid txid. Like PoW mining for the txid and I expect other CC contracts to use a similar mechanism if they want to rate limit usage.
 
-Combined, it became such a pain to get 0.1 coins, the faucet leeching problem was solved. It might not seem like too much trouble to change an address to get another 0.1 coins, but the way things are setup you need to launch the komodod -pubkey=<your pubkey> to change the pubkey that is active for a node. That means to change the pubkey being used, the komodod needs to be restarted and this creates a lot of issues for any automation trying to do this. Combined with the PoW required, only when 0.1 coins becomes worth a significant effort will faucet leeching return. In that case, the PoW requirement can be increased and coin amount decreased, likely with a faucet2 CC contract as I dont expect many such variations to be needed.
+Sülükluk yapmayi çok daha zor hale getirmek için, her musluk sadece % 90 daha az olduğu için sadece 0.1 sikke (1.0 dan aşağı) döndürdü.
+Aynı zamanda 3'ten az işlem içeren yeni bir adrese sahip olmak zorundaydı. 
+Sonunda her txid 00 ile başlamak ve bitmek için sınırlandı!
+Bu, geçerli bir txid oluşturmak için değerli CPU zamanının kullanımını (sisteme bağlı olarak 20 ila 60 saniye) zorlamak için harika bir hiledir.
+Txid için PoW madenciliği gibi ve diğer CC sözleşmelerinin de limit kullanımını derecelendirmek için benzer bir mekanizma kullanmasını bekliyorum.
+
+To make it much harder to leech, it was made so each faucetget returned only 0.1 coins (down from 1.0) so it was worth 90% less. 
+It was also made so that it had to be to a fresh address with less than 3 transactions. 
+Finally each txid was constrained to start and end with 00! 
+This is a cool trick to force usage of precious CPU time (20 to 60 seconds depending on system) to generate a valid txid. 
+Like PoW mining for the txid and I expect other CC contracts to use a similar mechanism if they want to rate limit usage.
+
+
+Kombine, 0.1 sikke almak için böyle bir acı oldu, musluk sülük sorunu çözüldü.
+Başka bir 0.1 sikke almak için bir adresi değiştirmek çok fazla sorun gibi görünmeyebilir.
+ancak kurulumun yolu, bir düğüm için aktif olan pubkey'i değiştirmek için komodod -pubkey = <yourpubkey> 'i başlatmanız gerekir. 
+Bu, kullanılan pubkey'i değiştirmek anlamına gelir, komodod yeniden başlatılmalı ve bu, 
+bunu yapmaya çalışan herhangi bir otomasyon için çok fazla sorun yaratır.
+Gerekli PoW ile birlikte, sadece 0.1 sikke önemli bir çabaya değer olduğunda musluk sülük dönüşü olacaktır.
+Bu durumda, bu tür varyasyonların çoğuna ihtiyaç duyulmadığından, PoW gereksinimi artırılabilir ve madeni para miktarı azalır.
+
+Combined, it became such a pain to get 0.1 coins, the faucet leeching problem was solved. 
+It might not seem like too much trouble to change an address to get another 0.1 coins, 
+but the way things are setup you need to launch the komodod -pubkey=<your pubkey> to change the pubkey that is active for a node. 
+That means to change the pubkey being used, the komodod needs to be restarted and this creates a lot of issues for any automation trying to do this. 
+Combined with the PoW required, only when 0.1 coins becomes worth a significant effort will faucet leeching return. 
+In that case, the PoW requirement can be increased and coin amount decreased, likely with a faucet2 CC contract as I dont expect many such variations to be needed.
