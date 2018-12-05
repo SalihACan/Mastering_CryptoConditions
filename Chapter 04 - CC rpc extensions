@@ -1,29 +1,108 @@
+Bölüm 4 - CC rpc uzantıları 
+
 Chapter 4 - CC rpc extensions
-Currently, CC contracts need to be integrated at the source level. This limits who is able to create and add new CC contracts, which at first is good, but eventually will be a too strict limitation. The runtime bindings chapter will touch on how to break out of the source based limitation, but there is another key interface level, the RPC.
 
-By convention, each CC contract adds an associated set of rpc calls to the komodo-cli. This not only simplifies the creation of the CC contract transactions, it further will allow dapps to be created just via rpc calls. That will require there being enough foundational CC contracts already in place. As we find new usecases that cannot be implemented via rpc, then a new CC contract is made that can handle that (and more) and the power of the rpc level increases. This is a long term process.
 
-The typical rpc calls that are added <CC>address, <CClist>, <CCinfo> return the various special CC addresses, the list of CC contract instances and info about each CC contract instance. Along with an rpc that creates a CC instance and of course the calls to invoke a CC instance.
-The role of the rpc calls are to create properly signed rawtransactions that are ready for broadcasting. This then allows using only the rpc calls to not only invoke but to create a specific instance of a CC. The faucet contract is special in that it only has a single instance, so some of these rpc calls are skipped.
+Şu anda CC sözleşmelerinin kaynak seviyesinde entegre edilmesi gerekmektedir. 
+Bu, ilk olarak iyi olan, ancak sonunda çok katı bir sınırlama olacak olan yeni CC sözleşmeleri yaratabilen ve ekleyebilen sınırlar. 
+Çalışma zamanı bağlamaları bölümü, kaynak tabanlı sınırlamanın nasıl kırılacağına değinecek, 
+ama başka bir kilit arayüz seviyesi var, RPC. 
+
+Currently, CC contracts need to be integrated at the source level. 
+This limits who is able to create and add new CC contracts, which at first is good, but eventually will be a too strict limitation. 
+The runtime bindings chapter will touch on how to break out of the source based limitation, 
+but there is another key interface level, the RPC.
+
+
+Sözleşmeye göre, her bir CC sözleşmesi, komodo-cli'ye ilişkili bir grup rpc çağrısı ekler. 
+Bu sadece CC sözleşme işlemlerinin oluşturulmasını kolaylaştırmakla kalmaz, aynı zamanda rpc çağrıları yoluyla dapp'lerin oluşturulmasını sağlar.
+Bu, halihazırda yerinde yeterli CC sözleşmeleri olmasını gerektirecektir. 
+RPC ile uygulanamayan yeni kullanım alanları bulduğumuzda, bunu (ve daha fazlasını) ve rpc seviyesinin gücünü artıran yeni bir CC sözleşmesi yapılır.
+Bu uzun vadeli bir süreçtir. 
+
+By convention, each CC contract adds an associated set of rpc calls to the komodo-cli. 
+This not only simplifies the creation of the CC contract transactions, it further will allow dapps to be created just via rpc calls. 
+That will require there being enough foundational CC contracts already in place. 
+As we find new usecases that cannot be implemented via rpc, then a new CC contract is made that can handle that (and more) and the power of the rpc level increases. 
+This is a long term process.
+
+
+<CC> adresi, <CClist>, <CCinfo> gibi çeşitli özel CC adreslerini, CC sözleşme örnekleri listesini ve 
+her CC sözleşme örneğiyle ilgili bilgileri ekleyen normal rpc çağrıları. 
+Bir CC örneği oluşturan bir rpc ile ve elbette bir CC örneğini çağırmak için çağrılar. 
+RPC çağrılarının rolü, yayın için hazır olan uygun şekilde imzalanmış ham işlemlerin oluşturulmasıdır.
+Bu daha sonra sadece rpc çağrılarının kullanılmasına izin vermekle kalmaz, aynı zamanda CC'nin belirli bir örneğini de yaratır.
+Musluk sözleşmesi, yalnızca tek bir örneğe sahip olması bakımından özeldir, bu nedenle bu rpc çağrılarının bazıları atlanır. 
+
+The typical rpc calls that are added <CC>address, <CClist>, <CCinfo> return the various special CC addresses, 
+the list of CC contract instances and info about each CC contract instance. 
+Along with an rpc that creates a CC instance and of course the calls to invoke a CC instance.
+The role of the rpc calls are to create properly signed rawtransactions that are ready for broadcasting. 
+This then allows using only the rpc calls to not only invoke but to create a specific instance of a CC. 
+The faucet contract is special in that it only has a single instance, so some of these rpc calls are skipped.
+
+
+Yani, mutlaka olmak zorunda olan rpc çağrıları yok, sadece genel bir düzen içine uyması için takip edilecek bir akıl hastanesi. 
 
 So, there is no MUSTHAVE rpc calls, just a sane convention to follow so it fits into the general pattern.
 
-One thing that I forgot to describe was how to create a special CC address and even though this is not really an rpc issue, it is kind of separate from the core CC functions, so I will show how to do it here:
+
+Tanımlamayı unuttuğum bir şey, özel bir CC adresi oluşturmaktı ve bu aslında bir rpc sorunu olmasa da, 
+Çekirdek CC işlevlerinden ayrı bir şey, bu yüzden burada nasıl yapılacağını göstereceğim: 
+
+One thing that I forgot to describe was how to create a special CC address and even though this is not really an rpc issue, 
+it is kind of separate from the core CC functions, so I will show how to do it here:
+
 
 const char *FaucetCCaddr = "R9zHrofhRbub7ER77B7NrVch3A63R39GuC";
 const char *FaucetNormaladdr = "RKQV4oYs4rvxAWx1J43VnT73rSTVtUeckk";
 char FaucetCChexstr[67] = { "03682b255c40d0cde8faee381a1a50bbb89980ff24539cb8518e294d3a63cefe12" };
 uint8_t FaucetCCpriv[32] = { 0xd4, 0x4f, 0xf2, 0x31, 0x71, 0x7d, 0x28, 0x02, 0x4b, 0xc7, 0xdd, 0x71, 0xa0, 0x39, 0xc4, 0xbe, 0x1a, 0xfe, 0xeb, 0xc2, 0x46, 0xda, 0x76, 0xf8, 0x07, 0x53, 0x3d, 0x96, 0xb4, 0xca, 0xa0, 0xe9 };
-Above are the specifics for the faucet CC, but each one has the equivalent in CCcustom.cpp. At the bottom of the file is a big switch statement where these values are copied into an in memory data structure for each CC type. This allows all the CC codebase to access these special addresses in a standard way.
+Yukarıda musluk CC için özellikleri vardır, ancak her biri CCcustom.cpp içinde eşdeğerdir. 
+Dosyanın alt kısmında, bu değerlerin her bir CC türü için bir bellek veri yapısına kopyalandığı büyük bir anahtar deyimidir. 
+Bu, tüm CC kod tabanının bu özel adreslere standart bir şekilde erişmesini sağlar. 
+
+const char *FaucetCCaddr = "R9zHrofhRbub7ER77B7NrVch3A63R39GuC";
+const char *FaucetNormaladdr = "RKQV4oYs4rvxAWx1J43VnT73rSTVtUeckk";
+char FaucetCChexstr[67] = { "03682b255c40d0cde8faee381a1a50bbb89980ff24539cb8518e294d3a63cefe12" };
+uint8_t FaucetCCpriv[32] = { 0xd4, 0x4f, 0xf2, 0x31, 0x71, 0x7d, 0x28, 0x02, 0x4b, 0xc7, 0xdd, 0x71, 0xa0, 0x39, 0xc4, 0xbe, 0x1a, 0xfe, 0xeb, 0xc2, 0x46, 0xda, 0x76, 0xf8, 0x07, 0x53, 0x3d, 0x96, 0xb4, 0xca, 0xa0, 0xe9 };
+Above are the specifics for the faucet CC, but each one has the equivalent in CCcustom.cpp. 
+At the bottom of the file is a big switch statement where these values are copied into an in memory data structure for each CC type. 
+This allows all the CC codebase to access these special addresses in a standard way.
+
+
+Yukarıdaki değerleri elde etmek için şu adımları izleyin: 
+A. yeni bir adres almak için getnewaddress'i kullanın ve bunu <CC> Normaladdr = ""; hat
+B. <CC> hexstr [67] = "" içine yerleştirilen pubkey'i almak için <newaddress <validateaddress kullanın. hat 
+C. daemon'u durdurun ve -pubkey = <pubkey ile B> ile başlayın ve bir <CC> adres rpc çağrısı yapın. 
+Konsolda Myprivkey () öğesinde (0) etkinleştirilmişse (CCutils.cpp), özel anahtar için hex'in çıktısını alacaksınız. 
+D. CCaddress ve privkey'i güncelleyin ve -pubkey = parametresini değiştirmeyi unutma 87
+
 
 In order to get the above values, follow these steps:
 A. use getnewaddress to get a new address and put that in the <CC>Normaladdr = ""; line
 B. use validateaddress <newaddress from A> to get the pubkey, which is put into the <CC>hexstr[67] = ""; line
-C. stop the daemon and start with -pubkey=<pubkey from B> and do a <CC>address rpc call. In the console you will get a printout of the hex for the privkey, assuming the if ( 0 ) in Myprivkey() is enabled (CCutils.cpp)
+C. stop the daemon and start with -pubkey=<pubkey from B> and do a <CC>address rpc call. 
+In the console you will get a printout of the hex for the privkey, assuming the if ( 0 ) in Myprivkey() is enabled (CCutils.cpp)
 D. update the CCaddress and privkey and dont forget to change the -pubkey= parameter
+
+
+Eklenecek ilk rpc komutu <CC> adresidir ve bunu yapmak için, rpcserver.h dosyasına bir satır ekler ve rpcserver.cpp içindeki komut dizisini günceller. 
 
 The first rpc command to add is <CC>address and to do that, add a line to rpcserver.h and update the commands array in rpcserver.cpp
 
-In the rpcwallet.cpp file you will find the actual rpc functions, find one of the <CC>address ones, copy paste, change the eval code to your eval code and customize the function. Oh, and dont forget to add an entry into eval.h
 
-Now you have made your own CC contract, but it wont link as you still need to implement the actual functions of it. This will be covered in the following chapters.
+Rpcwallet.cpp dosyasında gerçek rpc işlevlerini bulacaksınız. 
+<CC> adreslerinden birini bulun, kopyalayip yapıştırın, eval kodunu eval kodunuza göre değiştirin ve işlevi özelleştirin. 99
+Oh, ve eval.h'ye bir giriş eklemeyi unutma. 
+
+In the rpcwallet.cpp file you will find the actual rpc functions, 
+find one of the <CC>address ones, copy paste, change the eval code to your eval code and customize the function. 
+Oh, and dont forget to add an entry into eval.h
+
+
+Şimdi kendi CC sözleşmenizi yaptınız, ancak hala onun gerçek işlevlerini uygulamanız gerektiğinden bağlantı kurulamayacaktır.
+Bu sonraki bölümlerde ele alınacaktır.
+
+Now you have made your own CC contract, but it wont link as you still need to implement the actual functions of it. 
+This will be covered in the following chapters.
